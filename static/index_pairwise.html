@@ -1,0 +1,632 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Data Analyzer</title>
+    <style>
+        :root {
+            --primary-color: #34495e;
+            /* Darker primary color */
+            --secondary-color: #5dade2;
+            /* Lighter secondary color for accent */
+            --background-color: #ecf0f1;
+            /* Light gray background */
+            --card-background: #ffffff;
+            /* White card background */
+            --text-color: #2c3e50;
+            /* Dark text color */
+            --accent-color: #f39c12;
+            /* Accent color for highlights */
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            /* More common font */
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            /* Added top margin for better spacing */
+            padding: 20px;
+        }
+
+        .upload-section,
+        .section {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            /* More rounded corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            /* Softer shadow */
+            margin-bottom: 2rem;
+        }
+
+        .upload-section h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-section input[type="file"] {
+            margin-bottom: 1rem;
+        }
+
+        .upload-section button,
+        #analyzeButton {
+            background-color: var(--secondary-color);
+            color: var(--card-background);
+            border: none;
+            padding: 1rem 2rem;
+            /* Increased padding */
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            margin-top: 1rem;
+            /* Added margin for better spacing */
+        }
+
+        .upload-section button:hover,
+        #analyzeButton:hover {
+            background-color: #79aedb;
+            /* Slightly lighter hover color */
+        }
+
+        .result-section {
+            display: none;
+            /* Initially hidden */
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            /* Accent color for border */
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            /* Uppercase section titles */
+            letter-spacing: 1px;
+            text-align: center;
+            /* Center align section titles */
+        }
+
+        .column-card {
+            background: #f9f9f9;
+            /* Lighter column card background */
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            /* Lighter shadow for cards */
+            border-left: 5px solid var(--secondary-color);
+            /* Accent border on left */
+        }
+
+        .column-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .graph-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            /* Slightly wider graph containers */
+            gap: 2rem;
+            /* Increased gap */
+            margin-top: 2rem;
+        }
+
+        .graph-container {
+            background: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            /* Slightly stronger shadow for graphs */
+            text-align: center;
+        }
+
+        .graph-container h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .graph-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            /* Rounded corners for images */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            overflow: hidden;
+            /* To ensure border-radius is applied */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            /* Shadow for table */
+        }
+
+        th,
+        td {
+            padding: 15px;
+            /* Increased padding in table cells */
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: var(--card-background);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+            /* Light gray for even rows */
+        }
+
+        tr:hover {
+            background-color: #e0e0e0;
+            /* Lighter hover color for rows */
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5em 0.8em;
+            /* Adjusted badge padding */
+            border-radius: 20px;
+            /* More rounded badges */
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-left: 0.5em;
+        }
+
+        .normal {
+            background-color: #27ae60;
+            /* Green for normal */
+            color: var(--card-background);
+        }
+
+        .not-normal {
+            background-color: #c0392b;
+            /* Red for not normal */
+            color: var(--card-background);
+        }
+
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 40px;
+            /* Slightly larger loader */
+            height: 40px;
+            animation: spin 1.2s linear infinite;
+            /* Slightly slower spin */
+            margin: 25px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .standout-correlation {
+            color: var(--accent-color);
+            /* Use accent color for standout correlation */
+            font-weight: bold;
+        }
+
+        /* Header Selection Styles */
+        #headerSelection {
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        #headerSelection h2 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #headerCheckboxes {
+            display: flex;
+            flex-wrap: wrap;
+            /* Allow checkboxes to wrap */
+            justify-content: center;
+            /* Center checkboxes */
+            gap: 1rem;
+            /* Spacing between checkbox groups */
+            margin-bottom: 1.5rem;
+        }
+
+        #headerCheckboxes div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        #headerCheckboxes label {
+            margin-left: 0.5rem;
+            color: var(--text-color);
+        }
+
+        #analyzeButton {
+            display: block;
+            /* Ensure button is block to center properly if needed */
+            margin: 1rem auto 0;
+            /* Center button and add top margin */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="upload-section">
+            <h1>Banking Data Analysis System</h1>
+            <input type="file" id="csvFile" accept=".csv">
+            <div id="loading" class="loader" style="display: none;"></div>
+        </div>
+
+        <div id="headerSelection" style="display:none;">
+            <div class="section">
+                <h2>Select Columns to Analyze</h2>
+                <div id="headerCheckboxes">
+                    <!-- Header checkboxes will be generated here by JavaScript -->
+                </div>
+                <button id="analyzeButton" onclick="analyzeData()" style="display:none;">Analyze Data</button>
+            </div>
+        </div>
+
+        <div class="result-section" id="results">
+            <div class="section" id="overview">
+                <h2>Overview</h2>
+                <div id="overviewContent"></div>
+            </div>
+
+            <div class="section" id="basicStats">
+                <h2>Basic Statistics</h2>
+                <div id="basicStatsContent"></div>
+            </div>
+
+            <div class="section" id="graphs">
+                <h2>Data Visualizations</h2>
+                <div id="graphsContent"></div>
+            </div>
+
+            <div class="section" id="correlation">
+                <h2>Correlation Analysis</h2>
+                <div id="correlationContent"></div>
+                <div id="correlationInterpretation" style="margin-top: 1rem; font-style: italic; text-align: center;">
+                </div>
+            </div>
+
+            <div class="section" id="pairwiseGraphsSection">
+                <h2>Pairwise Feature Graphs</h2>
+                <div id="pairwiseGraphsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to convert string to title case
+        function toTitleCase(str) {
+            return str.split(' ')
+                     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                     .join(' ');
+        }
+
+        document.getElementById('csvFile').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('headerSelection').style.display = 'none'; // Hide header selection initially
+                document.getElementById('analyzeButton').style.display = 'none'; // Hide analyze button initially
+                document.getElementById('results').style.display = 'none'; // Hide results section
+                document.getElementById('pairwiseGraphsSection').style.display = 'none'; // Hide pairwise graphs section
+                // Clear previous contents
+                document.getElementById('overviewContent').innerHTML = '';
+                document.getElementById('basicStatsContent').innerHTML = '';
+                document.getElementById('graphsContent').innerHTML = '';
+                document.getElementById('correlationContent').innerHTML = '';
+                document.getElementById('correlationInterpretation').innerHTML = '';
+                document.getElementById('pairwiseGraphsContent').innerHTML = '';
+                document.getElementById('loading').style.display = 'block'; // Show loading
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/headers', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('loading').style.display = 'none'; // Hide loading
+                        if (data.headers) {
+                            console.log("Received headers:", data.headers); // Debug log
+                            generateHeaderCheckboxes(data.headers);
+                            document.getElementById('headerSelection').style.display = 'block'; // Show header selection
+                            document.getElementById('analyzeButton').style.display = 'block'; // Show analyze button
+                        } else if (data.detail) {
+                            alert("Error fetching headers: " + data.detail);
+                        } else {
+                            alert("Error fetching headers.");
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('loading').style.display = 'none'; // Hide loading
+                        alert("Error fetching headers: " + error);
+                    });
+            }
+        });
+
+        function generateHeaderCheckboxes(headers) {
+            console.log("generateHeaderCheckboxes called with headers:", headers); // DEBUG LOG
+            const headerCheckboxesDiv = document.getElementById('headerCheckboxes');
+            headerCheckboxesDiv.innerHTML = ''; // Clear previous checkboxes
+            
+            // Add select/deselect all checkbox
+            const selectAllDiv = document.createElement('div');
+            selectAllDiv.style.marginBottom = '1rem';
+            const selectAllCheckbox = document.createElement('input');
+            selectAllCheckbox.type = 'checkbox';
+            selectAllCheckbox.id = 'selectAll';
+            selectAllCheckbox.checked = true;
+            
+            const selectAllLabel = document.createElement('label');
+            selectAllLabel.htmlFor = 'selectAll';
+            selectAllLabel.textContent = 'Select/Deselect All';
+            
+            selectAllDiv.appendChild(selectAllCheckbox);
+            selectAllDiv.appendChild(selectAllLabel);
+            headerCheckboxesDiv.appendChild(selectAllDiv);
+            
+            // Add event listener for select/deselect all
+            selectAllCheckbox.addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#headerCheckboxes input[type="checkbox"]:not(#selectAll)');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+
+            headers.forEach(header => {
+                const checkboxDiv = document.createElement('div');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = header;
+                checkbox.value = header;
+                checkbox.checked = true; // Default to process all headers
+                
+                // Add event listener to update select all checkbox
+                checkbox.addEventListener('change', function() {
+                    const allCheckboxes = document.querySelectorAll('#headerCheckboxes input[type="checkbox"]:not(#selectAll)');
+                    const selectAllCheckbox = document.getElementById('selectAll');
+                    selectAllCheckbox.checked = Array.from(allCheckboxes).every(cb => cb.checked);
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = header;
+                label.textContent = header;
+
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                headerCheckboxesDiv.appendChild(checkboxDiv);
+            });
+            console.log("Header checkboxes generated successfully"); // DEBUG LOG
+        }
+
+        function analyzeData() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload a CSV file first.");
+                return;
+            }
+
+            const checkedHeaders = Array.from(document.querySelectorAll('#headerCheckboxes input[type="checkbox"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (checkedHeaders.length === 0) {
+                alert("Please select at least one column to analyze.");
+                return;
+            }
+
+
+            document.getElementById('results').style.display = 'none'; // Hide previous results
+            document.getElementById('pairwiseGraphsSection').style.display = 'none'; // Hide pairwise graphs section
+            document.getElementById('loading').style.display = 'block'; // Show loading
+
+            const formData = new FormData();
+            formData.append('file', file);
+            checkedHeaders.forEach(header => {
+                formData.append('headers_to_process', header); // Send selected headers as form data
+            });
+
+
+            fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(report => {
+                    document.getElementById('loading').style.display = 'none'; // Hide loading
+                    renderReport(report);
+                    document.getElementById('results').style.display = 'block'; // Show results section
+                    document.getElementById('pairwiseGraphsSection').style.display = 'block'; // Show pairwise graphs section
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none'; // Hide loading
+                    alert("Error analyzing data: " + error);
+                    console.error("Error analyzing data:", error);
+                });
+        }
+
+
+        function renderReport(report) {
+            renderOverview(report.overview);
+            renderBasicStats(report.basic_stats);
+            renderGraphs(report.graphs);
+            renderCorrelations(report.correlations, report.correlation_interpretations?.standout_interpretation);
+            renderPairwiseGraphs(report.pairwise_graphs); // Render pairwise graphs
+        }
+
+        function renderOverview(overview) {
+            let html = '';
+            for (const [colName, colData] of Object.entries(overview)) {
+                html += `
+                    <div class="column-card">
+                        <h3>${colName} (${colData.dtype})</h3>
+                        ${colData.is_normal !== undefined ? `
+                            <p>Distribution:
+                                <span class="badge ${colData.is_normal ? 'normal' : 'not-normal'}">
+                                    ${colData.is_normal ? 'Normal' : 'Non-Normal'}
+                                </span>
+                                (p-value: ${colData.p_value?.toFixed(4) ?? 'N/A'})
+                            </p>
+                            <p>Recommended Tests: ${colData.recommended_tests?.correlation},
+                            ${colData.recommended_tests?.group_comparison}</p>
+                        ` : ''}
+                        ${colData.transform_recommendations ? `
+                            <p>Suggested Transformations:
+                            ${colData.transform_recommendations.join(', ')}</p>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            document.getElementById('overviewContent').innerHTML = html;
+        }
+
+        function renderBasicStats(stats) {
+            let html = '';
+            for (const [colName, colData] of Object.entries(stats)) {
+                html += `
+                    <div class="column-card">
+                        <h3>${colName}</h3>
+                        <table>
+                            <tbody>
+                                ${Object.entries(colData).map(([key, value]) => `
+                                    <tr>
+                                        <td>${key}</td>
+                                        <td>${typeof value === 'number' ? value.toFixed(4) : value}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            document.getElementById('basicStatsContent').innerHTML = html;
+        }
+
+        function renderGraphs(graphs) {
+            let html = '<div class="graph-grid">';
+            for (const [colName, colGraphs] of Object.entries(graphs)) {
+                for (const [graphType, graphData] of Object.entries(colGraphs)) {
+                    if (graphData && typeof graphData === 'string' && !graphData.startsWith("Error") && graphData !== "No data available to plot") {
+                        html += `
+                            <div class="graph-container">
+                                <h4>${colName} - ${toTitleCase(graphType.replace('_', ' '))}</h4>
+                                <img src="data:image/png;base64,${graphData}"
+                                     style="width: 100%; height: auto;">
+                            </div>
+                        `;
+                    } else if (graphData && (graphData.startsWith("Error") || graphData === "No data available to plot")) {
+                        html += `
+                            <div class="graph-container">
+                                <h4>${colName} - ${toTitleCase(graphType.replace('_', ' '))}</h4>
+                                <p class="error">${graphData}</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            html += '</div>';
+            document.getElementById('graphsContent').innerHTML = html;
+        }
+
+
+        function renderCorrelations(correlations, interpretationText) {
+            let html = '<table>';
+            html += `
+                <tr>
+                    <th>Feature Pair</th>
+                    <th>Analysis Type</th>
+                    <th>Correlation</th>
+                    <th>p-value</th>
+                </tr>
+            `;
+
+            for (const [pair, data] of Object.entries(correlations)) {
+                const isStandout = data.is_standout ? 'standout-correlation' : ''; // CSS class for standout
+                html += `
+                    <tr>
+                        <td>${pair}</td>
+                        <td>${data.type}</td>
+                        <td class="${isStandout}">${data.coefficient?.toFixed(4) ?? data.statistic?.toFixed(4) ?? 'N/A'}</td>
+                        <td>${data.p_value?.toFixed(4) ?? 'N/A'}</td>
+                    </tr>
+                `;
+            }
+
+            html += '</table>';
+            document.getElementById('correlationContent').innerHTML = html;
+            document.getElementById('correlationInterpretation').innerText = interpretationText || ''; // Display interpretation
+        }
+
+        function renderPairwiseGraphs(pairwiseGraphs) {
+            let html = '<div class="graph-grid">';
+            for (const col1 in pairwiseGraphs) {
+                for (const col2 in pairwiseGraphs[col1]) {
+                    const graphs = pairwiseGraphs[col1][col2];
+                    for (const graphType in graphs) {
+                        if (graphs[graphType] && typeof graphs[graphType] === 'string' && !graphs[graphType].startsWith("Error") && graphs[graphType] !== "No data available to plot for one or both columns") {
+                            html += `
+                                <div class="graph-container">
+                                    <h4>${col1} vs ${col2} - ${toTitleCase(graphType.replace('_', ' '))}</h4>
+                                    <img src="data:image/png;base64,${graphs[graphType]}"
+                                         style="width: 100%; height: auto;">
+                                </div>
+                            `;
+                        } else if (graphs[graphType] && (graphs[graphType].startsWith("Error") || graphs[graphType] === "No data available to plot for one or both columns")) {
+                            html += `
+                                <div class="graph-container">
+                                    <h4>${col1} vs ${col2} - ${toTitleCase(graphType.replace('_', ' '))}</h4>
+                                    <p class="error">${graphs[graphType]}</p>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            }
+            html += '</div>';
+            document.getElementById('pairwiseGraphsContent').innerHTML = html;
+        }
+
+    </script>
+</body>
+
+</html>
