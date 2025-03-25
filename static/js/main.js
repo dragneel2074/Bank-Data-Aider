@@ -1,6 +1,6 @@
-import { handleFileUpload, analyzeData } from './handlers/fileHandler.js';
+import { handleFileUpload, analyzeData } from './fileHandler.js';
 import { renderGraphs, renderPairwiseGraphs } from './renderers/graphRenderer.js';
-import { renderOverview, renderBasicStats, renderCorrelations, renderRmf } from './renderers/statsRenderer.js';
+import { renderSummaryStats, renderDistributions, renderCorrelations, renderRmf } from './renderers/statsRenderer.js';
 
 // Initialize event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,64 +20,126 @@ document.addEventListener('DOMContentLoaded', function() {
     if (analyzeBtn) {
         console.log('Found analyze button element');
         analyzeBtn.addEventListener('click', function() {
-            // Get RMF column selections if they exist
-            const recencyCol = document.getElementById('recencyColumn')?.value;
-            const frequencyCol = document.getElementById('frequencyColumn')?.value;
-            const monetaryCol = document.getElementById('monetaryColumn')?.value;
-            
-            console.log(`RMF columns selected - Recency: ${recencyCol}, Frequency: ${frequencyCol}, Monetary: ${monetaryCol}`);
-            
-            // Pass RMF columns to analyzeData
-            analyzeData(recencyCol, frequencyCol, monetaryCol);
+            console.log('Analyze button clicked');
+            // Call analyzeData with standard parameters (not RMF)
+            analyzeData(false, '', '', '', false);
         });
     } else {
         console.error('Analyze button element not found');
     }
     
+    /* RMF functionality disabled
+    // Add event listener for RMF analysis button
+    const rmfAnalysisButton = document.getElementById('startRmfAnalysis');
+    if (rmfAnalysisButton) {
+        rmfAnalysisButton.addEventListener('click', function() {
+            // Get RMF columns
+            const recencyColumn = document.getElementById('recencyColumn').value;
+            const frequencyColumn = document.getElementById('frequencyColumn').value;
+            const monetaryColumn = document.getElementById('monetaryColumn').value;
+            const useAdvancedRmf = document.getElementById('useAdvancedRmf').checked;
+            
+            console.log('RMF Analysis requested:', {
+                recencyColumn,
+                frequencyColumn,
+                monetaryColumn,
+                useAdvancedRmf
+            });
+            
+            // Call analyzeData with RMF parameters
+            analyzeData(true, recencyColumn, frequencyColumn, monetaryColumn, useAdvancedRmf);
+        });
+    } else {
+        console.warn('RMF analysis button not found in the DOM');
+    }
+    
     // Setup RMF columns dropdowns change event to enable/disable RMF analysis
     setupRmfColumnsListeners();
+    */
 });
 
 /**
  * Set up event listeners for RMF column selection dropdowns
  */
+/* RMF functionality disabled
 function setupRmfColumnsListeners() {
-    const rmfColumns = ['recencyColumn', 'frequencyColumn', 'monetaryColumn'];
+    // Check for both old and new IDs
+    const rmfColumnPairs = [
+        ['recencyCol', 'recencyColumn'],
+        ['frequencyCol', 'frequencyColumn'],
+        ['monetaryCol', 'monetaryColumn']
+    ];
     
-    rmfColumns.forEach(colId => {
-        const dropdown = document.getElementById(colId);
+    rmfColumnPairs.forEach(([newId, oldId]) => {
+        // Try with new ID first, then fall back to old ID
+        let dropdown = document.getElementById(newId);
+        if (!dropdown) {
+            dropdown = document.getElementById(oldId);
+        }
+        
         if (dropdown) {
             dropdown.addEventListener('change', checkRmfSelections);
+        } else {
+            console.warn(`RMF dropdown ${newId}/${oldId} not found`);
         }
     });
+    
+    // Also add listener for the advanced RMF checkbox
+    const advancedRmfCheckbox = document.getElementById('useAdvancedRmf');
+    if (advancedRmfCheckbox) {
+        advancedRmfCheckbox.addEventListener('change', function() {
+            console.log('Advanced RMF option changed:', this.checked);
+        });
+    } else {
+        console.warn('Advanced RMF checkbox not found');
+    }
 }
+*/
 
 /**
  * Check if all RMF columns are selected and update UI accordingly
  */
+/* RMF functionality disabled
 function checkRmfSelections() {
-    const recencyCol = document.getElementById('recencyColumn')?.value;
-    const frequencyCol = document.getElementById('frequencyColumn')?.value;
-    const monetaryCol = document.getElementById('monetaryColumn')?.value;
-    const rmfInfoElement = document.getElementById('rmfSelectionInfo');
+    // Check for both old and new IDs
+    const recencyCol = document.getElementById('recencyCol')?.value || document.getElementById('recencyColumn')?.value;
+    const frequencyCol = document.getElementById('frequencyCol')?.value || document.getElementById('frequencyColumn')?.value;
+    const monetaryCol = document.getElementById('monetaryCol')?.value || document.getElementById('monetaryColumn')?.value;
+    const startRmfButton = document.getElementById('startRmfAnalysis');
     
-    if (rmfInfoElement) {
+    console.log('RMF column selection changed:', recencyCol, frequencyCol, monetaryCol);
+    
+    if (startRmfButton) {
         if (recencyCol && frequencyCol && monetaryCol) {
-            rmfInfoElement.innerHTML = '<div class="alert alert-success">RMF analysis will be performed with selected columns.</div>';
+            startRmfButton.disabled = false;
+            startRmfButton.title = 'Run RMF analysis with selected columns';
         } else {
-            rmfInfoElement.innerHTML = '<div class="alert alert-info">Select all three columns to enable RMF analysis.</div>';
+            startRmfButton.disabled = true;
+            startRmfButton.title = 'Please select all three columns to enable RMF analysis';
         }
     }
 }
+*/
 
 /**
  * Updates RMF dropdown options after headers are loaded
  */
+/* RMF functionality disabled
 window.updateRmfColumnOptions = function(headers) {
-    const rmfColumns = ['recencyColumn', 'frequencyColumn', 'monetaryColumn'];
+    // Check for both old and new IDs
+    const rmfColumnPairs = [
+        ['recencyCol', 'recencyColumn'],
+        ['frequencyCol', 'frequencyColumn'],
+        ['monetaryCol', 'monetaryColumn']
+    ];
     
-    rmfColumns.forEach(colId => {
-        const dropdown = document.getElementById(colId);
+    rmfColumnPairs.forEach(([newId, oldId]) => {
+        // Try with new ID first, then fall back to old ID
+        let dropdown = document.getElementById(newId);
+        if (!dropdown) {
+            dropdown = document.getElementById(oldId);
+        }
+        
         if (dropdown) {
             // Clear existing options
             dropdown.innerHTML = '<option value="">Select Column</option>';
@@ -89,6 +151,8 @@ window.updateRmfColumnOptions = function(headers) {
                 option.textContent = header;
                 dropdown.appendChild(option);
             });
+        } else {
+            console.warn(`RMF dropdown ${newId}/${oldId} not found when updating options`);
         }
     });
     
@@ -96,51 +160,45 @@ window.updateRmfColumnOptions = function(headers) {
     const rmfSetupSection = document.getElementById('rmfSetupSection');
     if (rmfSetupSection) {
         rmfSetupSection.style.display = 'block';
+    } else {
+        console.warn('RMF setup section not found');
     }
     
-    // Initialize info message
+    // Initialize button state
     checkRmfSelections();
-}
+};
+*/
 
 // Global render function used by fileHandler
 window.renderReport = function(report) {
     console.log('Rendering report:', report);
     
-    if (report.overview) {
-        renderOverview(report.overview);
+    if (report.summary) {
+        renderSummaryStats(report.summary);
     }
     
-    if (report.basic_stats) {
-        renderBasicStats(report.basic_stats);
+    if (report.distributions) {
+        renderDistributions(report.distributions);
     }
     
     if (report.graphs) {
-        renderGraphs(report.graphs, report.graphs_interpretations);
+        renderGraphs(report.graphs, report.interpretations);
     }
     
     if (report.correlations) {
-        renderCorrelations(
-            report.correlations,
-            report.correlation_interpretations?.standout_interpretation
-        );
+        renderCorrelations(report.correlations, report.interpretations ? report.interpretations.correlations : null);
     }
     
     // Add pairwise graphs rendering
     if (report.pairwise_graphs) {
         console.log('Rendering pairwise graphs:', report.pairwise_graphs);
-        renderPairwiseGraphs(report.pairwise_graphs, report.pairwise_graphs_interpretations);
+        renderPairwiseGraphs(report.pairwise_graphs, report.interpretations ? report.interpretations.pairwise : null);
     }
     
     // Add RMF analysis rendering
-    if (report.rmf_analysis) {
-        console.log('Rendering RMF analysis:', report.rmf_analysis);
-        renderRmf(report.rmf_analysis);
-        
-        // Show RMF section
-        const rmfSection = document.getElementById('rmfSection');
-        if (rmfSection) {
-            rmfSection.style.display = 'block';
-        }
+    if (report.rmf_results) {
+        console.log('Rendering RMF analysis:', report.rmf_results);
+        renderRmf(report.rmf_results);
     }
     
     // Show results section

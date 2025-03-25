@@ -89,6 +89,7 @@ function generateHeaderCheckboxes(headers) {
     selectAllCheckbox.type = 'checkbox';
     selectAllCheckbox.className = 'form-check-input';
     selectAllCheckbox.id = 'selectAllHeaders';
+    selectAllCheckbox.value = 'selectAll'; // Give it a distinct value
     selectAllCheckbox.checked = true;
     
     const selectAllLabel = document.createElement('label');
@@ -120,7 +121,7 @@ function generateHeaderCheckboxes(headers) {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.className = 'form-check-input';
-        checkbox.value = header;
+        checkbox.value = header; // Explicitly set the value to the header name
         checkbox.id = `header_${header.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}`;
         checkbox.checked = true; // Default all to checked
         
@@ -164,7 +165,7 @@ export function analyzeData(recencyCol, frequencyCol, monetaryCol) {
     console.log('Analyze data function called');
     
     // Get the checkboxes and file input
-    const checkboxes = document.querySelectorAll('#headerCheckboxes input[type="checkbox"]:checked');
+    const checkboxes = document.querySelectorAll('#headerCheckboxes input[type="checkbox"]:checked:not(#selectAllHeaders)');
     const fileInput = document.getElementById('csvFile');
     const analyzeBtn = document.getElementById('analyzeButton');
     const progressBar = document.getElementById('analyzeProgress');
@@ -182,10 +183,23 @@ export function analyzeData(recencyCol, frequencyCol, monetaryCol) {
         return;
     }
     
-    // Get selected headers
-    const selectedHeaders = Array.from(checkboxes).map(cb => cb.value);
+    // Get selected headers - make sure we only get valid column names
+    const selectedHeaders = [];
+    checkboxes.forEach(cb => {
+        // Only add the value if it's not 'on' (default checkbox value when not explicitly set)
+        if (cb.value && cb.value !== 'on') {
+            selectedHeaders.push(cb.value);
+        }
+    });
+    
     console.log('Selected headers:', selectedHeaders);
     console.log('RMF columns:', { recencyCol, frequencyCol, monetaryCol });
+    
+    // Ensure we have headers to analyze
+    if (selectedHeaders.length === 0) {
+        alert('No valid headers selected. Please select columns to analyze.');
+        return;
+    }
     
     // Create form data to send to the backend
     const formData = new FormData();
@@ -214,10 +228,13 @@ export function analyzeData(recencyCol, frequencyCol, monetaryCol) {
     .then(response => {
         if (progressBar) progressBar.style.width = '75%';
         
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
-        }
-        return response.json();
+        return response.json().then(data => {
+            if (!response.ok) {
+                // Use the error message from the server if available
+                throw new Error(data.error || data.detail || `Server error: ${response.status}`);
+            }
+            return data;
+        });
     })
     .then(data => {
         if (progressBar) progressBar.style.width = '100%';

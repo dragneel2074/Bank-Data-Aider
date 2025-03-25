@@ -1,0 +1,191 @@
+/* RMF Analysis Tool Styles */
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    line-height: 1.6;
+    padding-bottom: 2rem;
+}
+
+.navbar {
+    background-color: var(--dark-color);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    color: white !important;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-success {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+#reportSection {
+    display: none;
+}
+
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+#loadingIndicator {
+    display: none;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.segment-summary {
+    margin-top: 1.5rem;
+}
+
+/* Helper classes */
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+.tooltip-icon {
+    cursor: pointer;
+    color: var(--primary-color);
+    margin-left: 0.5rem;
+}
+
+/* Table styles */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+.table-dark {
+    color: #fff;
+    background-color: var(--dark-color);
+}
+
+/* Badge styles */
+.badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    border-radius: 10px;
+}
+
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+/* Segment styles */
+.segment-badge {
+    padding: 0.35em 0.65em;
+    font-weight: 600;
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.segment-champions {
+    background-color: #ffd700;
+    color: #333;
+}
+
+.segment-loyal {
+    background-color: #3498db;
+    color: white;
+}
+
+.segment-potential {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.segment-risk {
+    background-color: #f39c12;
+    color: white;
+}
+
+.segment-hibernating {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.segment-lost {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    .card-header h3 {
+        font-size: 1.5rem;
+    }
+} 
