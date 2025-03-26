@@ -165,7 +165,24 @@ async def analyze_rmf(
                     "segments": "Customers are segmented based on their RMF scores into categories like Champions, Loyal Customers, At Risk, etc."
                 }
             }
-            
+            # rmf_df = pd.DataFrame(rmf_results)
+            # rmf_df.to_csv("rmf_results.csv", index=False)
+            # print(f"RMF results saved to rmf_results.csv")
+            try:
+                # Convert the RMF results list to a DataFrame
+                rmf_df = pd.DataFrame(rmf_results)
+                print("DEBUG: Converted RMF results to DataFrame with shape:", rmf_df.shape)
+                # Ensure the indices align (resetting if necessary)
+                df_reset = df.reset_index(drop=True)
+                rmf_df_reset = rmf_df.reset_index(drop=True)
+                # Merge the original DataFrame with the RMF results DataFrame along the columns
+                merged_df = pd.concat([df_reset, rmf_df_reset], axis=1)
+                print("DEBUG: Merged RMF results with original DataFrame. Final shape:", merged_df.shape)
+                # Save the merged DataFrame as a CSV file
+                merged_df.to_csv("rmf_results.csv", index=False)
+                print("DEBUG: RMF results saved to rmf_results.csv")
+            except Exception as e:
+                print("DEBUG: Failed to merge and save RMF results:", e)
             # Add clustering explanation if available
             if has_clusters:
                 rmf_report["interpretation"]["clustering"] = (

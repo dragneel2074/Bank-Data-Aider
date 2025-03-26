@@ -441,35 +441,70 @@ def calculate_rmf(df: pd.DataFrame, recency_col: str, frequency_col: str, moneta
     unique_frequency = rmf_df[frequency_col].dropna().nunique()
     print(f"DEBUG: Calculating F score - unique values: {unique_frequency}")
     try:
-        if unique_frequency <= 1:
+        valid_frequency = rmf_df[frequency_col].dropna()
+        if valid_frequency.empty:
+            print(f"DEBUG: No valid frequency values found after dropping NaNs. Assigning score 1.")
+            rmf_df['F_Score'] = 1
+        elif unique_frequency <= 1:
             # If there's only one value, assign the middle score
             print(f"DEBUG: Only one unique value in {frequency_col}, assigning score 3")
             rmf_df['F_Score'] = 3
+        elif unique_frequency <=5:
+            print(f"DEBUG: Calculating F score - unique values: {unique_frequency} found. Using Direct Mapping or rank for F score")
+            #sort the unique values
+            unique_values = sorted(valid_frequency.unique())
+            score_range = list(range(1, unique_frequency + 1))
+            #create mapping for the values to scores 1 to unique_frequency count
+            value_to_score = {val: score for val, score in zip(unique_values, score_range)}
+            print(f"DEBUG: Mapping for F score: {value_to_score}")
+            #map the values to scores
+            rmf_df['F_Score'] = valid_frequency.map(value_to_score)
+            rmf_df['F_Score'] = rmf_df['F_Score'].fillna(1).astype(int)
         else:
             # For frequency, higher is better
             valid_frequency = rmf_df[frequency_col].dropna()
             if len(valid_frequency) > 5:
                 try:
-                    f_score = pd.qcut(valid_frequency, 
+                    f_score_series = pd.qcut(valid_frequency, 
                                     q=5, 
                                     labels=[1, 2, 3, 4, 5], 
                                     duplicates='drop')
-                    
+                    if f_score_series.nunique() < 5:
+                        print(f"Debug:qcut produced only {f_score_series.nunique()} unique scores. Using rank-based method.")
+                        # Fall back to rank-based method
+                        ranks = valid_frequency.rank(method='min')
+                        max_rank = ranks.max()
+                        if max_rank > 1:
+
+                            normalized = (((ranks - 1) / (max_rank - 1)) * 4 + 1).round()
+                            # rmf_df['F_Score'] = normalized
+                        else:
+                            normalized = pd.Series([3]*len(ranks),index=ranks.index)
+
+                            rmf_df.loc[valid_frequency.index,'F_Score'] = normalized.astype(int)
+                            # rmf_df['F_Score'] = ranks
+                    else:  
+                        print("DEBUG:qcut successfully produced 5 bins")                      
                     # Map back to original dataframe
-                    rmf_df['F_Score'] = pd.Series(index=valid_frequency.index, data=f_score.values)
+                        rmf_df['F_Score'] = pd.Series(index=valid_frequency.index, data=f_score_series.values)
                     # Ensure integer type
-                    rmf_df['F_Score'] = rmf_df['F_Score'].astype(int)
+                        rmf_df['F_Score'] = rmf_df['F_Score'].astype(int)
                 except Exception as e:
-                    print(f"DEBUG: Error with qcut for F score: {e}")
+                    print(f"DEBUG: Error with qcut for F score: {e}. Falling back to rank-based method.")
                     # Fall back to rank-based method
                     ranks = valid_frequency.rank(method='min')
                     max_rank = ranks.max()
-                    normalized = (((ranks - 1) / (max_rank - 1)) * 4 + 1).round()
-                    rmf_df.loc[valid_frequency.index, 'F_Score'] = normalized
+                    if max_rank > 1:
+                        normalized = (((ranks - 1) / (max_rank - 1)) * 4 + 1).round()
+                        # rmf_df.loc[valid_frequency.index, 'F_Score'] = normalized
+                    else:
+                        normalized = pd.Series([3]*len(ranks),index=ranks.index)
+                    rmf_df.loc[valid_frequency.index, 'F_Score'] = normalized.astype(int)
                     # Ensure integer type
-                    rmf_df['F_Score'] = rmf_df['F_Score'].astype(int)
+                    # rmf_df['F_Score'] = rmf_df['F_Score'].astype(int)
             else:
                 # With very few values, use simple ranking
+                print("DEBUG: With very few values, using simple ranking")
                 ordered_indices = valid_frequency.sort_values().index
                 scores = [1, 2, 3, 4, 5][:len(valid_frequency)]
                 rmf_df.loc[ordered_indices, 'F_Score'] = scores
@@ -480,7 +515,7 @@ def calculate_rmf(df: pd.DataFrame, recency_col: str, frequency_col: str, moneta
         print(f"DEBUG: Error calculating F score: {e}")
         # Catch-all fallback
         rmf_df['F_Score'] = 3  # Middle score
-    
+    rmf_df['F_Score'] = rmf_df['F_Score'].astype(int)
     # ----- Monetary Scoring (higher value = higher score) -----
     unique_monetary = rmf_df[monetary_col].dropna().nunique()
     print(f"DEBUG: Calculating M score - unique values: {unique_monetary}")
